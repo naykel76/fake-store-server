@@ -54,8 +54,8 @@ const dbTest = async () => {
   }
 };
 
-const createUserTable = async () => {
-  const createTableSql = `create table if not exists user 
+const createUsersTable = async () => {
+  const createTableSql = `create table if not exists users 
   (id integer primary key autoincrement,
     name text not null,
     email text not null unique,
@@ -69,11 +69,40 @@ const createUserTable = async () => {
   }
 };
 
-const checkEmailTaken = async (email) => {
-  const query = "select * from user where email = $email";
+const createOrdersTable = async () => {
+  // total price in cents
+  const createTableSql = `
+  CREATE TABLE IF NOT EXISTS orders (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    uid INTEGER NOT NULL,
+    item_numbers INTEGER NOT NULL,
+    is_paid INTEGER NOT NULL CHECK (is_paid IN (0, 1)),
+    is_delivered INTEGER NOT NULL CHECK (is_delivered IN (0, 1)),
+    total_price INTEGER NOT NULL,
+    order_items TEXT NOT NULL
+  )`;
+
   try {
-    if (!(await createUserTable()))
-      return { status: "error", message: "Failed to create User table!" };
+    await dbRun(createTableSql);
+    return true;
+  } catch (e) {
+    console.error(`Error in createUsersTable: ${e}.`);
+    return false;
+  }
+};
+
+const initTables = async () => {
+  try {
+    await createUsersTable();
+    await createOrdersTable();
+  } catch (e) {
+    console.error("Failed to init Tables: ", e);
+  }
+};
+
+const checkEmailTaken = async (email) => {
+  const query = "select * from users where email = $email";
+  try {
     const result = await dbGet(query, { $email: email });
     if (!result) return { status: "OK" };
     return { status: "error", message: "The email is already used." };
@@ -87,7 +116,7 @@ const checkEmailTaken = async (email) => {
 // the validation is to check if email has been used before
 // and all the three properties can't be empty.
 const createUser = async ({ name, email, password }) => {
-  const insertUserSql = `insert into user (name,email,password) 
+  const insertUserSql = `insert into users (name,email,password) 
         values (?,?,?)`;
 
   if (!name || !email || !password)
@@ -96,23 +125,19 @@ const createUser = async ({ name, email, password }) => {
       message: "Name, Email, and Password can't be empty.",
     };
   try {
-    if (!(await createUserTable()))
-      return { status: "error", message: "Failed to create User table!" };
     const checkEmailResult = await checkEmailTaken(email);
     if (checkEmailResult.status === "error") return checkEmailResult;
     const res = await dbRun(insertUserSql, [name, email, password]);
     return { status: "OK", id: res.lastID, name, email };
   } catch (e) {
     console.error(`Error in createUser: ${e}.`);
-    return { status: "error", message: "Failed to insert user into table!" };
+    return { status: "error", message: "Failed to insert users into table!" };
   }
 };
 // used for login a user
 const checkUser = async ({ email, password }) => {
-  const query = `select * from user where email=$email and password = $password`;
+  const query = `select * from users where email=$email and password = $password`;
   try {
-    if (!(await createUserTable()))
-      return { status: "error", message: "Failed to create User table!" };
     const res = await dbGet(query, { $email: email, $password: password });
     if (!res) return { status: "error", message: "Wrong email or password." };
 
@@ -126,15 +151,13 @@ const checkUser = async ({ email, password }) => {
 
 // update user name and password
 const updateUser = async ({ userID, name, password }) => {
-  const query = `update user set name = $name, password = $password where id = $id`;
+  const query = `update users set name = $name, password = $password where id = $id`;
   if (!name || !password)
     return {
       status: "error",
       message: "New Name and Password can't be empty.",
     };
   try {
-    if (!(await createUserTable()))
-      return { status: "error", message: "Failed to create User table!" };
     await dbRun(query, { $name: name, $password: password, $id: userID });
     return {
       status: "OK",
@@ -148,10 +171,8 @@ const updateUser = async ({ userID, name, password }) => {
 };
 
 const deleteUser = async (email) => {
-  const query = `delete from user where email = $email`;
+  const query = `delete from users where email = $email`;
   try {
-    if (!(await createUserTable()))
-      return { status: "error", message: "Failed to create User table!" };
     const res = await dbRun(query, { $email: email });
     return { status: "OK", users: res }; // don't check if deleted or not
   } catch (e) {
@@ -159,19 +180,102 @@ const deleteUser = async (email) => {
     return { status: "error", message: "Failed to delete user!" };
   }
 };
+
 // this is a test purpose function.
-const getAllUser = async () => {
-  const query = `select * from user`;
+const getAllUsers = async () => {
+  const query = `select * from users`;
   try {
-    if (!(await createUserTable()))
-      return { status: "error", message: "Failed to create User table!" };
     const res = await dbAll(query);
     return { status: "OK", users: res };
   } catch (e) {
-    console.error(`Error in getAllUser: ${e}.`);
-    return { status: "error", message: "Failed to get all user!" };
+    console.error(`Error in getAllUsers: ${e}.`);
+    return { status: "error", message: "Failed to get all users!" };
   }
 };
 
+const getAllOrders = async () => {
+  const query = `select * from orders`;
+  try {
+    const res = await dbAll(query);
+    return { status: "OK", orders: res };
+  } catch (e) {
+    console.error(`Error in getAllOrders: ${e}.`);
+    return { status: "error", message: "Failed to get all orders!" };
+  }
+};
+
+const getOrdersByUser = async ({ userID }) => {
+  const query = `select * from orders where uid = $userID`;
+  try {
+    const res = await dbAll(query, { $userID: userID });
+    return { status: "OK", orders: res };
+  } catch (e) {
+    console.error(`Error in getOrdersByUser: ${e}.`);
+    return { status: "error", message: "Failed to get orders by user!" };
+  }
+};
+
+//  uid INTEGER NOT NULL,
+//     item_numbers INTEGER NOT NULL,
+//     is_paid INTEGER NOT NULL CHECK (is_paid IN (0, 1)),
+//     is_delivered INTEGER NOT NULL CHECK (is_delivered IN (0, 1)),
+//     total_price INTEGER NOT NULL,
+//     order_items T
+
+// items is an array of object of this format
+// {pid,quantity,price}
+const createOrder = async ({ userID, items }) => {
+  const [itemNumber, totalPrice] = items.reduce(
+    (ret, itm) => [
+      ret[0] + itm.quantity,
+      ret[1] + Math.round(itm.quantity * itm.price * 100),
+    ],
+    [0, 0]
+  );
+  const orderItems = JSON.stringify(items);
+  const insertOrderSql = `insert into orders (uid,item_numbers,total_price,order_items,is_paid,is_delivered) 
+        values (?,?,?,?,?,?)`;
+  try {
+    const res = await dbRun(insertOrderSql, [
+      userID,
+      itemNumber,
+      totalPrice,
+      orderItems,
+      0,
+      0,
+    ]);
+    return { status: "OK", id: res.lastID };
+  } catch (e) {
+    console.error(`Error in createOrder: ${e}.`);
+    return { status: "error", message: "Failed to insert orders table!" };
+  }
+};
+
+const updateOrder = async ({ orderID, isPaid, isDelivered }) => {
+  const query = `update orders set is_paid = $isPaid, is_delivered=$isDelivered where id = $orderID`;
+  try {
+    const res = await dbRun(query, {
+      $orderID: orderID,
+      $isPaid: isPaid,
+      $isDelivered: isDelivered,
+    });
+    return { status: "OK", result: res };
+  } catch (e) {
+    console.error("updateOrder Error:", e);
+    return { state: "error", message: "update order error" };
+  }
+};
+
+initTables();
 // dbTest(); // this function is for internal test.
-module.exports = { createUser, checkUser, getAllUser, deleteUser, updateUser };
+module.exports = {
+  createUser,
+  checkUser,
+  getAllUsers,
+  deleteUser,
+  updateUser,
+  getAllOrders,
+  createOrder,
+  getOrdersByUser,
+  updateOrder,
+};
