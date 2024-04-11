@@ -1,7 +1,8 @@
 const { createOrder, getOrdersByUser, updateOrder } = require("../db/index");
 
 const createOrderMiddleware = async (req, res, next) => {
-  const { userID, items } = req.body;
+  const userID = res.locals.userID;
+  const { items } = req.body;
   const result = await createOrder({ userID, items });
   res.locals.result = result;
   next();

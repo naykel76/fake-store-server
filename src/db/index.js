@@ -91,10 +91,28 @@ const createOrdersTable = async () => {
   }
 };
 
+const createShoppingCartTable = async () => {
+  // total price in cents
+  const createTableSql = `
+  CREATE TABLE IF NOT EXISTS cart (
+    uid INTEGER UNIQUE NOT NULL,
+    cart_items TEXT NOT NULL
+  )`;
+
+  try {
+    await dbRun(createTableSql);
+    return true;
+  } catch (e) {
+    console.error(`Error in createShoppingCartTable: ${e}.`);
+    return false;
+  }
+};
+
 const initTables = async () => {
   try {
     await createUsersTable();
     await createOrdersTable();
+    await createShoppingCartTable();
   } catch (e) {
     console.error("Failed to init Tables: ", e);
   }
@@ -113,17 +131,11 @@ const checkEmailTaken = async (email) => {
 };
 
 // this function is used for sign up a user.
-// the validation is to check if email has been used before
-// and all the three properties can't be empty.
+// the validation is by middleware
 const createUser = async ({ name, email, password }) => {
   const insertUserSql = `insert into users (name,email,password) 
         values (?,?,?)`;
 
-  if (!name || !email || !password)
-    return {
-      status: "error",
-      message: "Name, Email, and Password can't be empty.",
-    };
   try {
     const checkEmailResult = await checkEmailTaken(email);
     if (checkEmailResult.status === "error") return checkEmailResult;
@@ -266,6 +278,34 @@ const updateOrder = async ({ orderID, isPaid, isDelivered }) => {
   }
 };
 
+const updateCart = async ({ uid, items }) => {
+  const query = `INSERT INTO cart (uid, cart_items)
+VALUES ($uid, $itemstr)
+ON CONFLICT (uid)
+DO UPDATE SET cart_items = excluded.cart_items;`;
+  try {
+    const res = await dbRun(query, {
+      $uid: uid,
+      $itemstr: JSON.stringify(items),
+    });
+    return { status: "OK", result: res };
+  } catch (e) {
+    console.error("updateCart Error:", e);
+    return { state: "error", message: "update cart error" + e };
+  }
+};
+const getCart = async ({ uid }) => {
+  const query = `select * from cart where uid = $uid`;
+  try {
+    const res = await dbGet(query, { $uid: uid });
+    if (!res) return { status: "OK", items: [] };
+    const items = JSON.parse(res.cart_items);
+    return { status: "OK", items };
+  } catch (e) {
+    console.error(`Error in getCart: ${e}.`);
+    return { status: "error", message: "Failed to get cart items!" };
+  }
+};
 initTables();
 // dbTest(); // this function is for internal test.
 module.exports = {
@@ -278,4 +318,6 @@ module.exports = {
   createOrder,
   getOrdersByUser,
   updateOrder,
+  updateCart,
+  getCart,
 };

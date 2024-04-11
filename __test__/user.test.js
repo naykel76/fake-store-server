@@ -2,7 +2,11 @@ const request = require("supertest");
 const app = require("../app");
 const { deleteUser } = require("../src/db/index");
 const { verifyToken } = require("../src/service/jsw");
-const testUser = { email: "test@test.com", name: "Test User", password: "123" };
+const testUser = {
+  email: "test@test.com",
+  name: "Test User",
+  password: "Abcdefg3",
+};
 describe("User API Endpoints", () => {
   beforeEach(async () => {
     await deleteUser(testUser.email);
@@ -44,10 +48,7 @@ describe("User API Endpoints", () => {
       .set("Accept", "application/json");
     expect(res.statusCode).toEqual(200);
     expect(res.body).toHaveProperty("status", "error");
-    expect(res.body).toHaveProperty(
-      "message",
-      "Name, Email, and Password can't be empty."
-    );
+    expect(res.body).toHaveProperty("message", "User name can't be empty");
   });
 
   it("POST /users/signin - a user should be able to signin with correct email and password", async () => {

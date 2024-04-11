@@ -13,6 +13,7 @@ const { setToken, auth } = require("../middle_ware/auth");
  * /users:
  *   get:
  *     summary: Retrieve all users (Debug Only)
+ *     tags: [Users]
  *     description: Fetches a list of all users in the database. This endpoint requires no authentication and is intended solely for debugging purposes. It should not be used in the fake-store client or in production environments.
  *     responses:
  *       200:
@@ -62,6 +63,7 @@ router.get("/", async function (req, res, next) {
  * /users/signup:
  *   post:
  *     summary: Sign up a new user
+ *     tags: [Users]
  *     description: Registers a new user with the information provided in the request body. Always returns HTTP 200. Success or error is indicated by the response body content.
  *     requestBody:
  *       required: true
@@ -76,13 +78,16 @@ router.get("/", async function (req, res, next) {
  *             properties:
  *               name:
  *                 type: string
- *                 description: The user's full name.
+ *                 description: The user's full name. Can't be empty.
+ *                 example: Tom Sawyer.
  *               email:
  *                 type: string
- *                 description: The user's email address. Must be unique.
+ *                 description: The user's email address. Must be unique and valid email format.
+ *                 example: tom@advanture.com
  *               password:
  *                 type: string
- *                 description: The user's password.
+ *                 description: The password must contain at least one uppercase letter, one lowercase letter, and one digit. The minimum length of the password is 8 characters.
+ *                 example: Abcdefg8
  *     responses:
  *       200:
  *         description: HTTP 200 returned for both success and failure cases. Check the response body for further details.
@@ -129,6 +134,7 @@ router.post("/signup", [createUserMiddleware, setToken, sendResponse]);
  * /users/signin:
  *   post:
  *     summary: Sign in an existing user
+ *     tags: [Users]
  *     description: Authenticates a user with the provided email and password. Always returns HTTP 200. Success or error is indicated by the response body content.
  *     requestBody:
  *       required: true
@@ -192,6 +198,7 @@ router.post("/signin", [checkUserMiddleware, setToken, sendResponse]);
  * /users/update:
  *   post:
  *     summary: Update user's name and password
+ *     tags: [Users]
  *     description: Allows a logged-in user to update their name and password. The user must provide a valid authorization token. Email address and user ID cannot be changed. Always returns HTTP 200, with success or error indicated by the response body content.
  *     security:
  *       - bearerAuth: []
@@ -252,5 +259,4 @@ router.post("/signin", [checkUserMiddleware, setToken, sendResponse]);
  *       bearerFormat: JWT
  */
 router.post("/update", [auth, updateUserMiddleware, sendResponse]);
-
 module.exports = router;

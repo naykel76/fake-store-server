@@ -1,13 +1,17 @@
 const request = require("supertest");
 const app = require("../app");
 const { deleteUser } = require("../src/db/index");
-const testUser = { email: "test@test.com", name: "Test User", password: "123" };
+const testUser = {
+  email: "test@test.com",
+  name: "Test User",
+  password: "Abcdefg3",
+};
 const testEnv = { userID: 0, token: "", orderID: 0 };
 const testItems = [
   { prodID: 1, price: 3.5, quantity: 2 },
   { prodID: 2, price: 10.75, quantity: 1 },
 ];
-describe("User API Endpoints", () => {
+describe("Orders API Endpoints", () => {
   beforeAll(async () => {
     await deleteUser(testUser.email);
     const res = await request(app)
@@ -18,21 +22,10 @@ describe("User API Endpoints", () => {
     testEnv.token = res.body.token;
   });
 
-  const testUser = {
-    email: "test@test.com",
-    name: "Test User",
-    password: "123",
-  };
-  const testEnv = { userID: 0, token: "", orderID: 0 };
-  const testItems = [
-    { prodID: 1, price: 3.5, quantity: 2 },
-    { prodID: 2, price: 10.75, quantity: 1 },
-  ];
-
   it("POST /orders/neworder - should create a new order when a user uses correct token", async () => {
     const res = await request(app)
       .post("/orders/neworder")
-      .send({ userID: testEnv.userID, items: testItems })
+      .send({ items: testItems })
       .set("Accept", "application/json")
       .set("Authorization", `Bearer ${testEnv.token}`);
 

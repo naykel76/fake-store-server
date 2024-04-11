@@ -6,9 +6,10 @@ var logger = require("morgan");
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./src/swagger/swaggerDoc");
 
-var indexRouter = require("./src/routes/index");
+// var indexRouter = require("./src/routes/index");
 var usersRouter = require("./src/routes/users");
 var ordersRouter = require("./src/routes/orders");
+const cartRouter = require("./src/routes/cart");
 var app = express();
 
 // view engine setup
@@ -27,6 +28,7 @@ app.get("/", (req, res) => {
 });
 app.use("/users", usersRouter);
 app.use("/orders", ordersRouter);
+app.use("/cart", cartRouter);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
@@ -43,5 +45,14 @@ app.use(function (err, req, res, next) {
   res.status(err.status || 500);
   res.render("error");
 });
+
+if (process.env.NODE_ENV !== "test") {
+  setTimeout(() => {
+    console.log(
+      "\x1b[32m%s\x1b[0m",
+      "\nFake store server started. Visit http://localhost:3000/ for API documentation.\n"
+    );
+  }, 1000);
+}
 
 module.exports = app;

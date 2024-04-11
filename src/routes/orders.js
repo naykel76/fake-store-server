@@ -14,6 +14,7 @@ const { sendResponse } = require("../middle_ware/user");
  * /orders:
  *   get:
  *     summary: Retrieve all orders (Debug Only)
+ *     tags: [Orders]
  *     description: Fetches a list of all orders in the database. This endpoint requires no authentication and is intended solely for debugging purposes. It should not be used in the fake-store client or in production environments. Exposes order details including ID, user ID, item numbers, payment and delivery status, total price, and order items.
  *     responses:
  *       200:
@@ -75,6 +76,7 @@ router.get("/", async function (req, res, next) {
  * /orders/all:
  *   get:
  *     summary: Retrieve all orders of the logged-in user
+ *     tags: [Orders]
  *     description: Fetches a list of all orders placed by the currently logged-in user. A valid authorization token must be provided in the request headers.
  *     security:
  *       - bearerAuth: []
@@ -130,6 +132,7 @@ router.get("/all", [auth, getOrderByUserMiddleware, sendResponse]);
  * /orders/neworder:
  *   post:
  *     summary: Create a new order
+ *     tags: [Orders]
  *     description: Allows a logged-in user to create a new order with the specified items. The user must provide a valid authorization token. Returns HTTP 200 with success or error indicated by the response body content.
  *     security:
  *       - bearerAuth: []
@@ -140,12 +143,8 @@ router.get("/all", [auth, getOrderByUserMiddleware, sendResponse]);
  *           schema:
  *             type: object
  *             required:
- *               - userID
  *               - items
  *             properties:
- *               userID:
- *                 type: integer
- *                 description: The ID of the user creating the order.
  *               items:
  *                 type: array
  *                 description: The list of items to include in the order.
@@ -159,12 +158,15 @@ router.get("/all", [auth, getOrderByUserMiddleware, sendResponse]);
  *                     prodID:
  *                       type: integer
  *                       description: The product ID of the item.
+ *                       example: 2
  *                     price:
  *                       type: number
  *                       description: The price of the item.
+ *                       example: 1.57
  *                     quantity:
  *                       type: integer
  *                       description: The quantity of the item.
+ *                       example: 1
  *     responses:
  *       200:
  *         description: >
@@ -209,6 +211,7 @@ router.post("/neworder", [auth, createOrderMiddleware, sendResponse]);
  * /orders/updateorder:
  *   post:
  *     summary: Update order status
+ *     tags: [Orders]
  *     description: Allows setting an order as paid, delivered, or both. Requires a valid authorization token.
  *     security:
  *       - bearerAuth: []
