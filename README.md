@@ -1,7 +1,3 @@
-Apologies for the confusion. Let's create a README.md file for the `fake-store-server`, which serves as the backend for the `fake-store` React Native app project in the Mobile Application Development (MAD) course.
-
----
-
 # Fake Store Server
 
 ## Overview
