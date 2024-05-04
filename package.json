@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "test": "NODE_ENV=test jest"
+    "test": "NODE_ENV=test jest --verbose",
+    "test2": "jest"
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",
