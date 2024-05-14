@@ -2,8 +2,8 @@ const request = require("supertest");
 const app = require("../app");
 const { deleteUser } = require("../src/db/index");
 const testUser = {
-  email: "test@test.com",
-  name: "Test User",
+  email: "test-order@test.com",
+  name: "Test User Order",
   password: "Abcdefg3",
 };
 const testEnv = { userID: 0, token: "", orderID: 0 };

@@ -108,7 +108,7 @@ const createShoppingCartTable = async () => {
   }
 };
 
-const initTables = async () => {
+(async () => {
   try {
     await createUsersTable();
     await createOrdersTable();
@@ -116,7 +116,7 @@ const initTables = async () => {
   } catch (e) {
     console.error("Failed to init Tables: ", e);
   }
-};
+})();
 
 const checkEmailTaken = async (email) => {
   const query = "select * from users where email = $email";
@@ -306,7 +306,7 @@ const getCart = async ({ uid }) => {
     return { status: "error", message: "Failed to get cart items!" };
   }
 };
-initTables();
+// initTables();
 // dbTest(); // this function is for internal test.
 module.exports = {
   createUser,
