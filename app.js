@@ -5,6 +5,7 @@ var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./src/swagger/swaggerDoc");
+var cors = require('cors');
 
 const { getFakeStoreData } = require("./src/db/fakeStoreData");
 // var indexRouter = require("./src/routes/index");
@@ -13,6 +14,9 @@ var ordersRouter = require("./src/routes/orders");
 const cartRouter = require("./src/routes/cart");
 const productRouter = require("./src/routes/product");
 var app = express();
+
+// Enable CORS
+app.use(cors());
 
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
