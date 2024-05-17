@@ -75,7 +75,7 @@ const createOrdersTable = async () => {
   CREATE TABLE IF NOT EXISTS orders (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     uid INTEGER NOT NULL,
-    item_numbers INTEGER NOT NULL,
+    item_numbers INTEGER,
     is_paid INTEGER NOT NULL CHECK (is_paid IN (0, 1)),
     is_delivered INTEGER NOT NULL CHECK (is_delivered IN (0, 1)),
     total_price INTEGER NOT NULL,
